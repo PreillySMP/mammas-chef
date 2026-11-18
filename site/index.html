@@ -42,6 +42,13 @@ code{font-family:ui-monospace,Menlo,monospace;font-size:.92em}
 p code,li code{background:var(--muted);padding:.1em .4em;border-radius:.4rem;overflow-wrap:anywhere}
 ul.l{padding-left:1.2rem}ul.l li{margin-bottom:.4rem}
 .note{background:#fff;border-left:6px solid var(--terra);border-radius:1rem;padding:1.25rem 1.5rem}
+.flow{display:grid;gap:1rem;margin:1.75rem 0}
+.lane{background:#fff;border-radius:var(--r);padding:1.1rem 1.25rem;border:1px solid hsl(30 10% 15%/.08);display:flex;flex-wrap:wrap;align-items:center;gap:.6rem .75rem}
+.meal{background:var(--muted);border-radius:1rem;padding:.55rem .9rem;font-size:.95rem;line-height:1.35}
+.meal b{display:block;font:600 .75rem Outfit,sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--terra-text)}
+.meal.batch{background:hsl(120 15% 49%/.1);border:2px dashed var(--olive)}.meal.batch b{color:var(--olive-d)}
+.arr{color:var(--soft);font-weight:700}
+@media(max-width:40rem){.lane{flex-direction:column;align-items:flex-start}.arr{transform:rotate(90deg);margin-left:1rem}}
 footer{padding:2rem 0 3rem;color:var(--soft);font-size:.95rem}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}.btn:hover{transform:none}}
 </style></head><body>
@@ -51,19 +58,32 @@ footer{padding:2rem 0 3rem;color:var(--soft);font-size:.95rem}
 <section class="hero"><div class="wrap"><div>
 <p class="eyebrow">Free and open source</p>
 <h1>An AI meal planner you run on your own computer.</h1>
-<p class="lead">Get a 7-day plan from a pantry photo or a typed request, built around your household's diet and allergies. It is free, MIT licensed and open source.</p>
+<p class="lead">Get a 7-day plan from a pantry photo or a typed request, built around your household's diet and allergies. Cook once and eat twice: the plan turns Monday's dinner into Tuesday's lunch. It is free, MIT licensed and open source.</p>
 <div class="btns"><a class="btn p" href="https://github.com/PreillySMP/mammas-chef">Get it on GitHub</a><a class="btn s" href="#install">Install in 3 commands</a></div></div>
 <figure class="shot" style="--ar:4/3"><img src="assets/hero.jpg" width="1344" height="752" style="object-position:right center" alt="Two people sharing a platter of roasted vegetables and chickpeas, with olives, flatbread and lemons on the table" fetchpriority="high"></figure>
 </div></section>
 
 <section style="padding-top:0"><div class="wrap"><figure class="shot" style="--ar:1440/780"><img src="assets/screenshot-planner.png" width="1440" height="780" alt="The weekly meal plan view in Mamma's Chef, with breakfast, lunch and dinner for each day" loading="lazy"><figcaption>The weekly plan view. Swap a meal or regenerate a whole day from here.</figcaption></figure></div></section>
 
+<section id="prep"><div class="wrap"><p class="eyebrow">Cook once, eat twice</p>
+<h2>Your week is planned as one connected kitchen</h2>
+<p class="lead">Most meal planners treat every meal on its own. Mamma's Chef plans how food carries forward through the week, so the dinner you cook on Monday feeds your lunch on Tuesday, and an hour of prep on Sunday covers meals until Thursday.</p>
+<div class="flow">
+<div class="lane" role="group" aria-label="Example: Monday's roast chicken makes extra chicken for Tuesday lunch and Wednesday dinner"><span class="meal"><b>Mon dinner</b>Roast chicken thighs</span><span class="arr" aria-hidden="true">→</span><span class="meal batch"><b>Makes extra</b>Shredded chicken, fridge, use by Wed</span><span class="arr" aria-hidden="true">→</span><span class="meal"><b>Tue lunch</b>Chicken grain bowls</span><span class="meal"><b>Wed dinner</b>Chicken quesadillas</span></div>
+<div class="lane" role="group" aria-label="Example: a pot of rice cooked on Sunday is used for Monday lunch and Thursday dinner"><span class="meal"><b>Sun prep</b>Cook a big pot of rice</span><span class="arr" aria-hidden="true">→</span><span class="meal batch"><b>Batch</b>Cooked rice, fridge, use by Thu</span><span class="arr" aria-hidden="true">→</span><span class="meal"><b>Mon lunch</b>Veggie fried rice</span><span class="meal"><b>Thu dinner</b>Stuffed peppers</span></div>
+</div>
+<div class="grid">
+<div class="card"><h3>Planned leftovers</h3><p>Every batch says how much it makes, how to store it and when to use it by, so nothing goes to waste in the back of the fridge.</p></div>
+<div class="card"><h3>See where food goes</h3><p>The Pipeline view follows each batch from the meal that makes it to every meal that uses it. The Prep Strategy tab also estimates how much cooking time you save.</p></div>
+<div class="card"><h3>Swaps stay connected</h3><p>Swap the meal that makes a batch, and the meals that ate its leftovers switch to the new meal's leftovers.</p></div>
+</div>
+<p style="margin-top:1.25rem">You also get a prep-day checklist and a night-before routine for the week.</p></div></section>
+
 <section id="features"><div class="wrap"><h2>What it does</h2>
 <div class="grid">
 <div class="card"><h3>Plan from what you have</h3><p>Start from a pantry photo, a typed request, your favourite recipes, or any mix of the three.</p></div>
 <div class="card"><h3>Change one thing</h3><p>Swap a single meal or regenerate a whole day, and leave the rest of the week alone.</p></div>
 <div class="card"><h3>Shopping list by aisle</h3><p>One consolidated list, grouped by aisle, with items you already have in the pantry taken out.</p></div>
-<div class="card"><h3>Prep-day strategy</h3><p>Prep day guides and night-before timelines to cut cooking time during the week.</p></div>
 <div class="card"><h3>Recipe library</h3><p>Browse recipes, add your own custom recipes, and save favourites to pin into future plans.</p></div>
 <div class="card"><h3>Print and export</h3><p>Save a plan as a PDF, add meals to your calendar as an .ics file, or download a CSV spreadsheet.</p></div>
 </div>
