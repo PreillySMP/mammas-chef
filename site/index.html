@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Mamma's Chef: an AI meal planner you run on your own computer</title><meta name="description" content="An open-source AI meal planner you run on your own computer. Make 7-day plans from a pantry photo or a typed request, built around your household's diet and allergies.">
+<title>Mamma's Chef: a self-hosted AI meal planner for busy families</title><meta name="description" content="A free, open-source AI meal planner for busy families with little ones, running on your own computer. Well-seasoned recipes, a shopping list you can actually shop from, and leftovers planned into later meals.">
 <link rel="canonical" href="https://mammaschef.ai/"><meta name="theme-color" content="#f9f7f2">
-<meta property="og:type" content="website"><meta property="og:site_name" content="Mamma's Chef"><meta property="og:title" content="Mamma's Chef: an AI meal planner you run on your own computer"><meta property="og:description" content="An open-source AI meal planner you run on your own computer. Make 7-day plans from a pantry photo or a typed request, built around your household's diet and allergies."><meta property="og:url" content="https://mammaschef.ai/"><meta property="og:image" content="https://mammaschef.ai/assets/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Mamma's Chef: an AI meal planner you run on your own computer"><meta name="twitter:description" content="An open-source AI meal planner you run on your own computer. Make 7-day plans from a pantry photo or a typed request, built around your household's diet and allergies."><meta name="twitter:image" content="https://mammaschef.ai/assets/og.png">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Mamma's Chef"><meta property="og:title" content="Mamma's Chef: a self-hosted AI meal planner for busy families"><meta property="og:description" content="A free, open-source AI meal planner for busy families with little ones, running on your own computer. Well-seasoned recipes, a shopping list you can actually shop from, and leftovers planned into later meals."><meta property="og:url" content="https://mammaschef.ai/"><meta property="og:image" content="https://mammaschef.ai/assets/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Mamma's Chef: a self-hosted AI meal planner for busy families"><meta name="twitter:description" content="A free, open-source AI meal planner for busy families with little ones, running on your own computer. Well-seasoned recipes, a shopping list you can actually shop from, and leftovers planned into later meals."><meta name="twitter:image" content="https://mammaschef.ai/assets/og.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet"><style>:root{--bg:hsl(40 33% 97%);--fg:hsl(30 10% 15%);--olive:hsl(120 15% 49%);--olive-d:hsl(120 15% 35%);--terra:hsl(24 60% 62%);--terra-d:hsl(24 60% 48%);--terra-text:hsl(24 60% 36%);--sky:hsl(197 71% 73%);--muted:hsl(40 20% 90%);--soft:hsl(30 10% 33%);--r:1.5rem}
 *{box-sizing:border-box}html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--fg);font:1.0625rem/1.65 "Plus Jakarta Sans",system-ui,sans-serif;overflow-x:hidden}
@@ -49,6 +49,12 @@ ul.l{padding-left:1.2rem}ul.l li{margin-bottom:.4rem}
 .meal.batch{background:hsl(120 15% 49%/.1);border:2px dashed var(--olive)}.meal.batch b{color:var(--olive-d)}
 .arr{color:var(--soft);font-weight:700}
 @media(max-width:40rem){.lane{flex-direction:column;align-items:flex-start}.arr{transform:rotate(90deg);margin-left:1rem}}
+#flavor-shopping .card p:not(.eyebrow){margin:0 0 1em}.card .eyebrow{color:var(--terra-text)}
+.quote{margin:0;padding:1rem 1.15rem;background:var(--muted);border-radius:1rem;font-size:.97rem;color:var(--fg)}.quote span{display:block;margin-top:.6rem;color:var(--soft)}
+.swap{width:100%;border-collapse:collapse;font-size:.97rem}.swap th{text-align:left;font:600 .78rem Outfit,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--terra-text);padding:.4rem .5rem;border-bottom:2px solid var(--muted)}
+.swap td{padding:.65rem .5rem;border-bottom:1px solid var(--muted);vertical-align:top;color:var(--soft)}.swap td strong{color:var(--fg)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.issues{list-style:none;padding:0;margin:1.25rem 0;display:grid;gap:.6rem}.issues li{background:#fff;border:1px solid hsl(30 10% 15%/.08);border-radius:1rem;padding:.8rem 1.1rem}.issues a{font-weight:700}.issues span{color:var(--soft);font-size:.92rem}
 footer{padding:2rem 0 3rem;color:var(--soft);font-size:.95rem}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}.btn:hover{transform:none}}
 </style></head><body>
@@ -57,13 +63,35 @@ footer{padding:2rem 0 3rem;color:var(--soft);font-size:.95rem}
 <main id="top">
 <section class="hero"><div class="wrap"><div>
 <p class="eyebrow">Free and open source</p>
-<h1>An AI meal planner you run on your own computer.</h1>
-<p class="lead">Get a 7-day plan from a pantry photo or a typed request, built around your household's diet and allergies. Cook once and eat twice: the plan turns Monday's dinner into Tuesday's lunch. It is free, MIT licensed and open source.</p>
+<h1>Less time planning. More time around the table.</h1>
+<p class="lead">A free, open-source AI meal planner for busy families with little ones, running on your own computer. Get a week of well-seasoned meals, a shopping list you can actually shop from, and leftovers planned into later meals.</p>
 <div class="btns"><a class="btn p" href="https://github.com/PreillySMP/mammas-chef">Get it on GitHub</a><a class="btn s" href="#install">Install in 3 commands</a></div></div>
 <figure class="shot" style="--ar:4/3"><img src="assets/hero.jpg" width="1344" height="752" style="object-position:right center" alt="Two people sharing a platter of roasted vegetables and chickpeas, with olives, flatbread and lemons on the table" fetchpriority="high"></figure>
 </div></section>
 
+<section id="story" style="padding-top:1rem"><div class="wrap"><div class="note" style="border-left-color:var(--olive)">
+<p class="eyebrow">Why we built it</p>
+<h2 style="font-size:1.6rem">Made by two working parents</h2>
+<p>We're a busy family with young kids, and Mamma's Chef started because my wife needed help planning the week's meals. The meal planners we found seemed to be made by people who didn't have toddlers or busy jobs, so we built our own.</p>
+<p style="margin:0">Two problems shaped it. AI recipes kept coming out bland, so a lot of our early work went into teaching it to season food properly. And AI shopping lists asked for things like one clove of garlic, which no store sells, so the app now turns recipes into a list you can actually shop from.</p>
+</div></div></section>
+
 <section style="padding-top:0"><div class="wrap"><figure class="shot" style="--ar:1440/780"><img src="assets/screenshot-planner.png" width="1440" height="780" alt="The weekly meal plan view in Mamma's Chef, with breakfast, lunch and dinner for each day" loading="lazy"><figcaption>The weekly plan view. Swap a meal or regenerate a whole day from here.</figcaption></figure></div></section>
+
+<section id="flavor-shopping"><div class="wrap"><div class="two" style="margin-top:0">
+<div class="card"><p class="eyebrow">Flavor first</p><h3 style="font-size:1.5rem">Food your whole family will eat</h3>
+<p>Every recipe is written to a seasoning standard, with layered herbs and spices and steps specific enough to follow. The AI is told to use at least three seasonings beyond salt, pepper and oil, and each plan is checked against that rule.</p>
+<p>Each recipe also carries a flavor note. Turn on the toddler option and every meal gets a tip for little ones. From a real plan:</p>
+<blockquote class="quote"><strong>Herb-crusted chicken thighs with lemon-garlic quinoa.</strong> “Smoky paprika and herb crust gives a warm depth while lemon-garlic quinoa adds bright, fresh contrast.”<br><span><b>Toddler tip:</b> “Shred the chicken off the bone into bite-size pieces and serve with soft quinoa so it's easy to scoop with a fork.”</span></blockquote></div>
+<div class="card"><p class="eyebrow">Practical shopping</p><h3 style="font-size:1.5rem">A list you can shop from</h3>
+<p>Recipes ask for cloves and tablespoons. Stores sell heads and bunches. The app adds up every meal in the week and turns it into what you actually buy. From the same real plan:</p>
+<table class="swap"><caption class="sr">Recipe amounts compared with the shopping list</caption><thead><tr><th scope="col">The recipes ask for</th><th scope="col">Your list says</th></tr></thead><tbody>
+<tr><td>1, 2, 2, 2, 4 and 4 cloves of garlic, in 6 meals</td><td><strong>2 heads garlic</strong></td></tr>
+<tr><td>2, 2 and 1 tablespoons of cilantro, in 3 meals</td><td><strong>1 bunch cilantro</strong></td></tr>
+<tr><td>A pinch of this and a teaspoon of that</td><td><strong>Listed once as a pantry item, no amount</strong></td></tr>
+</tbody></table>
+<p style="margin-top:1rem">Everything is grouped by aisle, and items already in your pantry are left off.</p></div>
+</div></div></section>
 
 <section id="prep"><div class="wrap"><p class="eyebrow">Cook once, eat twice</p>
 <h2>Your week is planned as one connected kitchen</h2>
@@ -84,7 +112,6 @@ footer{padding:2rem 0 3rem;color:var(--soft);font-size:.95rem}
 <div class="grid">
 <div class="card"><h3>Plan from what you have</h3><p>Start from a pantry photo, a typed request, your favourite recipes, or any mix of the three.</p></div>
 <div class="card"><h3>Change one thing</h3><p>Swap a single meal or regenerate a whole day, and leave the rest of the week alone.</p></div>
-<div class="card"><h3>Shopping list by aisle</h3><p>One consolidated list, grouped by aisle, with items you already have in the pantry taken out.</p></div>
 <div class="card"><h3>Recipe library</h3><p>Browse recipes, add your own custom recipes, and save favourites to pin into future plans.</p></div>
 <div class="card"><h3>Print and export</h3><p>Save a plan as a PDF, add meals to your calendar as an .ics file, or download a CSV spreadsheet.</p></div>
 </div>
@@ -125,6 +152,7 @@ mammaschef shopping latest</code></pre>
 <li><strong>Allergy checks are a safety net, not a guarantee.</strong> The app tells the AI what to avoid, scans each plan for allergen keywords, and can ask a second AI model for an opinion. The AI still suggests foods you asked it to avoid. In testing, a plan for a sesame allergy included hummus.</li>
 <li>The keyword scan only knows the words on its list, so a meal with no warning can still contain an allergen. The second-opinion check needs a Vercel AI Gateway key and is skipped without one.</li>
 <li>Always read every recipe, ingredient and label yourself. This is not medical advice.</li>
+<li><strong>Privacy:</strong> your database stays on your computer, but meal requests and household details, including allergies, are sent to the AI provider you choose. If you connect an AI agent, what it reads also goes to that agent's provider.</li>
 <li>Only Cerebras is tested end to end.</li>
 <li>This is early software, version 0.1.0, maintained by one person in their spare time. Replies to issues and pull requests may take a few days.</li>
 <li>Each account can generate 10 plans and swap 20 meals a day. You can change the limits in <code>supabase/functions/_shared/rateLimit.ts</code>.</li>
@@ -132,11 +160,19 @@ mammaschef shopping latest</code></pre>
 </ul></div></div></section>
 
 <section id="contribute"><div class="wrap"><h2>Contribute</h2>
-<p>Help is welcome with testing other AI providers, trying other agents with the MCP server, widening allergy-check coverage, and improving the docs.</p>
-<div class="btns"><a class="btn p" href="https://github.com/PreillySMP/mammas-chef/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22">Good first issues</a><a class="btn s" href="https://github.com/PreillySMP/mammas-chef/discussions">Discussions</a><a class="btn s" href="https://github.com/PreillySMP/mammas-chef/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a></div></div></section>
+<p>This is a small project, and the most useful help right now is testing it in places we can't. Pick one of these open issues:</p>
+<ul class="issues">
+<li><a href="https://github.com/PreillySMP/mammas-chef/issues/4">#4 Test OpenAI end to end</a> <span>Generate real plans with OpenAI and report how they come out.</span></li>
+<li><a href="https://github.com/PreillySMP/mammas-chef/issues/5">#5 Try a local or other model</a> <span>Ollama, OpenRouter or another OpenAI-compatible service.</span></li>
+<li><a href="https://github.com/PreillySMP/mammas-chef/issues/6">#6 Try another AI agent with the MCP server</a> <span>Anything other than Claude Code.</span></li>
+<li><a href="https://github.com/PreillySMP/mammas-chef/issues/7">#7 Report how setup goes on Linux or Windows (WSL)</a> <span>Setup has only been checked on macOS.</span></li>
+<li><a href="https://github.com/PreillySMP/mammas-chef/issues/8">#8 Clear the 10 lint warnings</a> <span>A small code task for a first pull request.</span></li>
+</ul>
+<p>Widening allergy-check coverage and improving the docs are welcome too.</p>
+<div class="btns"><a class="btn p" href="https://github.com/PreillySMP/mammas-chef/issues">See all open issues</a><a class="btn s" href="https://github.com/PreillySMP/mammas-chef/discussions">Discussions</a><a class="btn s" href="https://github.com/PreillySMP/mammas-chef/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a></div></div></section>
 
 <section id="hosted"><div class="wrap"><div class="note"><h2 style="font-size:1.5rem">Used the hosted app?</h2>
-<p>The hosted app at mammaschef.ai is being retired. The same app is now free to run yourself, and the steps are in <a href="#install">Install</a>. Plans saved in the hosted app cannot be carried over.</p></div></div></section>
+<p>The hosted app no longer runs at mammaschef.ai, which is now this page. The same app is free to run yourself, and the steps are in <a href="#install">Install</a>. Plans saved in the hosted app cannot be carried over.</p></div></div></section>
 </main>
 <footer><div class="wrap"><p>Mamma's Chef is MIT licensed. <a href="https://github.com/PreillySMP/mammas-chef">Source on GitHub</a>.</p></div></footer>
 <script>
