@@ -16,6 +16,8 @@ Most meal planners treat every meal on its own. Mamma's Chef plans how cooked fo
 - **The Pipeline view.** In the Prep Strategy tab, each batch is shown from the meal that makes it to every meal that uses it, along with an estimate of the cooking time you save.
 - **Connected swaps.** Swap or regenerate the meal that makes a batch, and the meals that ate its leftovers switch to the new meal's leftovers.
 
+![The Pipeline view: a Saturday prep batch of quinoa feeds four lunches across the week, with about 2 hours 15 minutes of active cooking saved](site/assets/screenshot-pipeline.png)
+
 > **Not medical advice.** Meal plans are written by AI, which makes mistakes. If you or someone you cook for has a food allergy, always check every ingredient and label yourself. See [Allergy safety](#allergy-safety).
 
 ## What you need
