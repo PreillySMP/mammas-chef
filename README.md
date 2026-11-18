@@ -1,8 +1,22 @@
 # Mamma's Chef
 
-An AI meal planner you run on your own computer. It creates weekly meal plans, shopping lists and prep-day strategies, with options for allergies, toddlers and glucose-conscious eating.
+An AI meal planner you run on your own computer. It creates weekly meal plans, shopping lists and prep-day strategies, with options for allergies, toddlers and glucose-conscious eating. Plans are built so food carries forward through the week: Monday's dinner becomes Tuesday's lunch.
 
 You bring your own AI key, and your data stays in a database on your machine.
+
+![The weekly meal plan view in Mamma's Chef, with breakfast, lunch and dinner for each day](site/assets/screenshot-planner.png)
+
+## Cook once, eat twice
+
+Most meal planners treat every meal on its own. Mamma's Chef plans how cooked food and prepped ingredients are reused across the week:
+
+- **Planned leftovers.** A meal can make extra on purpose. Monday's roast chicken makes shredded chicken for Tuesday's grain bowls and Wednesday's quesadillas.
+- **Prep-day batches.** An hour of prep on your prep day, such as a pot of rice or a tray of roasted vegetables, covers meals later in the week.
+- **Storage and use-by dates.** Every batch says how much it makes, how to store it and when to use it by.
+- **The Pipeline view.** In the Prep Strategy tab, each batch is shown from the meal that makes it to every meal that uses it, along with an estimate of the cooking time you save.
+- **Connected swaps.** Swap or regenerate the meal that makes a batch, and the meals that ate its leftovers switch to the new meal's leftovers.
+
+![The Pipeline view: a Saturday prep batch of quinoa feeds four lunches across the week, with about 2 hours 15 minutes of active cooking saved](site/assets/screenshot-pipeline.png)
 
 > **Not medical advice.** Meal plans are written by AI, which makes mistakes. If you or someone you cook for has a food allergy, always check every ingredient and label yourself. See [Allergy safety](#allergy-safety).
 
