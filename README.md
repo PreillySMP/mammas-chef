@@ -6,6 +6,20 @@ You bring your own AI key, and your data stays in a database on your machine.
 
 > **Not medical advice.** Meal plans are written by AI, which makes mistakes. If you or someone you cook for has a food allergy, always check every ingredient and label yourself. See [Allergy safety](#allergy-safety).
 
+## A look inside
+
+### Weekly meal plan
+
+![Weekly meal plan with meals organised by day](site/assets/screenshot-planner.png)
+
+### Shopping list
+
+![Shopping list with ingredients grouped by category](site/assets/screenshot-shopping.png)
+
+### Recipe
+
+![Recipe view with ingredients and cooking instructions](site/assets/screenshot-recipe.png)
+
 ## What you need
 
 - [Node.js](https://nodejs.org) 20 or newer
