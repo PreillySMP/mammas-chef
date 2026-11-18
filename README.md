@@ -1,10 +1,10 @@
 # Mamma's Chef
 
-An AI meal planner you run on your own computer. It creates weekly meal plans, shopping lists and prep-day strategies, with options for allergies, toddlers and glucose-conscious eating. Plans are built so food carries forward through the week: Monday's dinner becomes Tuesday's lunch.
+A self-hosted AI meal planner for busy families with little ones, made by two working parents. It creates a week of well-seasoned meals, a shopping list you can actually shop from, and a prep plan where food carries forward through the week: Monday's dinner becomes Tuesday's lunch. There are options for allergies, toddlers and glucose-conscious eating.
 
-You bring your own AI key, and your data stays in a database on your machine.
+You bring your own AI key, and your database stays on your machine. Website: [mammaschef.ai](https://mammaschef.ai)
 
-![The weekly meal plan view in Mamma's Chef, with breakfast, lunch and dinner for each day](site/assets/screenshot-planner.png)
+![A 14-second tour of a real plan: the weekly calendar, a recipe that creates leftovers, a shopping list with 2 heads of garlic and 1 bunch of cilantro, and the Pipeline view showing Sunday's chicken feeding Tuesday's lunch](site/assets/tour.gif)
 
 ## Cook once, eat twice
 
