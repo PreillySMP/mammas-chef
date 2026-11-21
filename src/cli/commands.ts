@@ -2,10 +2,12 @@
 import { readFileSync } from "node:fs";
 import { format, isValid, parseISO } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-import { loadMealPlan, deleteMealPlan, addFavorite } from "@/services/mealPlanDbService";
+import { loadMealPlan, deleteMealPlan, addFavorite, getFavorites } from "@/services/mealPlanDbService";
 import { listSavedPlans } from "@/services/savedPlansService";
-import { generateShoppingList } from "@/services/shoppingListService";
-import { searchRecipeLibrary, recipeLibraryRowToMealRecipe, addLibraryRecipeToPlan } from "@/services/recipeLibraryService";
+import { generateShoppingList, type GeneratedShoppingList } from "@/services/shoppingListService";
+import {
+  searchRecipeLibrary, recipeLibraryRowToMealRecipe, addLibraryRecipeToPlan, getRecipeLibraryMealRecipe,
+} from "@/services/recipeLibraryService";
 import {
   createPlan, swapMeal, regenerateDay, savePlanWithShoppingList, allergenFlaggedMeals, countMissingMeals, sortDays,
 } from "@/services/planWorkflow";
@@ -13,7 +15,7 @@ import { buildWeekSkipSlots, DEFAULT_INCLUDED_MEALS, PLANNER_V2_MEAL_TYPES } fro
 import {
   ALL_WEEKDAYS, ALLERGY_OPTIONS, CUISINE_OPTIONS, DIETARY_OPTIONS, WEEK_START_OPTIONS, getNextStartDate, getOrderedDays,
 } from "@/constants/preferences";
-import { checkAllergens } from "../../supabase/functions/_shared/allergens";
+import { checkAllergens, markAllergenCautions } from "../../supabase/functions/_shared/allergens";
 import type { MealPlanResponse, MealRecipe } from "@/types/mealPlan";
 
 export const NOTICE = "AI-written. If anyone has a food allergy, check every ingredient and label yourself.";
@@ -180,27 +182,94 @@ function startDateOf(plan: MealPlanResponse) {
   return plan.startDate ? parseISO(plan.startDate) : undefined;
 }
 
+/** How the shopping list came out, so a saved plan with a failed list isn't reported as all done. */
+export function shoppingListResult(saved: { shoppingList: GeneratedShoppingList | null; shoppingListError?: string }) {
+  const list = saved.shoppingList;
+  if (!list) return { status: "failed" as const, items: 0, written_by: null, error: saved.shoppingListError ?? "Unknown error." };
+  return {
+    status: list.saveError ? "not_saved" as const : "saved" as const,
+    items: list.items.length,
+    written_by: list.source.startsWith("ai") ? "ai" as const : "local_fallback" as const,
+    error: list.saveError ?? null,
+  };
+}
+
+// ---------- Pinned recipes and favorites ----------
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const OLD_ALLERGY_NOTE = /^Allergy warning: may contain [^.]*\. Check every ingredient before cooking\.\s*/;
+const sameTitle = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+
+/**
+ * Pinned recipes and favorites skip the planner's allergen scan, and a favorite may carry a
+ * warning written for an older allergy list, so scan them against the profile as it is now.
+ */
+export function withAllergyWarnings(recipes: MealRecipe[], allergies: string[]): MealRecipe[] {
+  const fresh = recipes.map((r) => ({ ...r, cautionNote: r.cautionNote?.replace(OLD_ALLERGY_NOTE, "") || undefined }));
+  markAllergenCautions(fresh, checkAllergens(fresh, allergies));
+  return fresh;
+}
+
+/** A pin is a library recipe_id or the title of a favorite; an unknown one is an error, never silently dropped. */
+async function resolvePins(userId: string, refs: string[]): Promise<MealRecipe[]> {
+  const favorites = refs.some((r) => !UUID.test(r.trim())) ? await getFavorites(userId) : [];
+  return Promise.all(refs.map(async (raw) => {
+    const ref = raw.trim();
+    if (UUID.test(ref)) {
+      return getRecipeLibraryMealRecipe(ref).catch(() => { throw new CliError(`No library recipe "${ref}". Use a recipe_id from search_recipes.`); });
+    }
+    const favorite = favorites.find((f) => sameTitle(f.recipe_data.title, ref));
+    if (!favorite) throw new CliError(`No favorite called "${ref}". Use a title from list_favorites, or a recipe_id from search_recipes.`);
+    return favorite.recipe_data;
+  }));
+}
+
 // ---------- Commands ----------
 
-export async function makePlan(opts: { request: string; startDate?: string; meals?: string[]; skipDays?: string[] }) {
+export async function makePlan(opts: {
+  request: string; startDate?: string; meals?: string[]; skipDays?: string[];
+  /** Library recipe_ids or favorite titles to build the week around. */
+  pinned?: string[];
+  /** Refuse when the week already has a plan (MCP mode: an agent may retry a call that timed out). */
+  refuseDuplicateWeek?: boolean;
+}) {
   const session = await requireSession();
   const profile = await getProfile();
   const weekStart = profile.week_start_day ?? "Sunday";
   const start = opts.startDate ? parseISO(opts.startDate) : getNextStartDate(weekStart);
   if (!isValid(start)) throw new CliError(`Start date "${opts.startDate}" isn't a date. Use YYYY-MM-DD.`);
+  const startDate = format(start, "yyyy-MM-dd");
   const meals = opts.meals ? opts.meals.map(canonicalMealType) : DEFAULT_INCLUDED_MEALS;
   const skipSlots = buildWeekSkipSlots(getOrderedDays(weekStart), meals, (opts.skipDays ?? []).map(canonicalDay));
+
+  if (opts.refuseDuplicateWeek) {
+    // shortcut: check-then-create, so two calls in separate server processes can both pass; move the check into the database if that ever happens.
+    const existing = (await listSavedPlans(session.user.id)).find((p) => p.start_date === startDate);
+    if (existing) {
+      throw new CliError(`There is already a plan for the week of ${startDate}: "${existing.title}" (plan_id ${existing.id}). If a create_plan call just timed out, this is probably its result, so read it with get_plan. To make another plan for the same week, ask the user first, then call again with allow_duplicate set to true.`);
+    }
+  }
+  const pinned = withAllergyWarnings(await resolvePins(session.user.id, opts.pinned ?? []), profile.allergies);
 
   const plan = await createPlan({
     prompt: opts.request.trim() || "Generate a meal plan for the selected meal slots.",
     weekStart,
     accessToken: session.access_token,
     skipSlots: Object.keys(skipSlots).length > 0 ? skipSlots : undefined,
-    startDate: format(start, "yyyy-MM-dd"),
+    startDate,
+    pinnedRecipes: pinned.length > 0 ? pinned : undefined,
   });
   const saved = await savePlanWithShoppingList(session.user.id, plan, { weekStart, startDate: start });
-  const { summary } = await reloadSummary(saved.planId, weekStart);
-  return { ...summary, shopping_list_items: saved.shoppingList?.items.length ?? 0, shopping_list_error: saved.shoppingListError ?? null };
+  const { plan: savedPlan, summary } = await reloadSummary(saved.planId, weekStart);
+  return {
+    ...summary,
+    shopping_list: shoppingListResult(saved),
+    // day is null when the planner left a pinned recipe out.
+    pinned: pinned.map((p) => ({
+      title: p.title,
+      day: savedPlan.weekPlan.days.find((d) => d.meals.some((m) => sameTitle(m.title, p.title)))?.day ?? null,
+    })),
+  };
 }
 
 export async function listPlans() {
@@ -227,9 +296,12 @@ export async function swap(ref: string, dayRef: string, mealRef: string, hint?: 
   const { session, weekStart, planId, plan } = await loadPlan(ref);
   const { day, mealType, dayIndex, meal } = findMeal(plan, dayRef, mealRef);
   const result = await swapMeal(plan, { dayIndex, mealType, hint, accessToken: session.access_token });
-  await savePlanWithShoppingList(session.user.id, result.plan, { weekStart, startDate: startDateOf(plan), existingPlanId: planId });
+  const saved = await savePlanWithShoppingList(session.user.id, result.plan, { weekStart, startDate: startDateOf(plan), existingPlanId: planId });
   const { summary } = await reloadSummary(planId, weekStart);
-  return { ...summary, changed: { day, meal: mealType, from: meal.title, to: result.newMeal.title }, leftovers_updated: result.cascadeSuffixes };
+  return {
+    ...summary, shopping_list: shoppingListResult(saved),
+    changed: { day, meal: mealType, from: meal.title, to: result.newMeal.title }, leftovers_updated: result.cascadeSuffixes,
+  };
 }
 
 export async function regen(ref: string, dayRef: string, hint?: string) {
@@ -240,10 +312,10 @@ export async function regen(ref: string, dayRef: string, hint?: string) {
   const dayIndex = found >= 0 ? found : plan.weekPlan.days.length;
   const before = plan.weekPlan.days[found]?.meals.map((m) => m.title) ?? [];
   const result = await regenerateDay(plan, { dayIndex, dayLabel: day, hint, weekStart, accessToken: session.access_token });
-  await savePlanWithShoppingList(session.user.id, result.plan, { weekStart, startDate: startDateOf(plan), existingPlanId: planId });
+  const list = await savePlanWithShoppingList(session.user.id, result.plan, { weekStart, startDate: startDateOf(plan), existingPlanId: planId });
   const { plan: saved, summary } = await reloadSummary(planId, weekStart);
   const after = saved.weekPlan.days.find((d) => d.day === day)?.meals.map((m) => m.title) ?? [];
-  return { ...summary, changed: { day, from: before, to: after }, leftovers_updated: result.cascadeSuffixes };
+  return { ...summary, shopping_list: shoppingListResult(list), changed: { day, from: before, to: after }, leftovers_updated: result.cascadeSuffixes };
 }
 
 export async function shopping(ref: string) {
@@ -291,8 +363,13 @@ export async function addRecipe(ref: string, dayRef: string, mealRef: string, re
   if (!dayRow) throw new CliError(`This plan has no ${day}. Run \`mammaschef regen ${planId.slice(0, 8)} ${day}\` to add it.`);
   // Replaces whatever is in the slot; the allergen scan runs inside the shared insert.
   const added = await addLibraryRecipeToPlan(recipeId, dayRow.id, mealType, true);
-  const { summary } = await reloadSummary(planId, weekStart);
-  return { ...summary, changed: { day, meal: mealType, to: added.title } };
+  const { plan: saved, summary } = await reloadSummary(planId, weekStart);
+  // The shared insert rebuilds the list but swallows a failure, so read the outcome off the stored list.
+  const items = saved.shoppingList.length;
+  const shopping_list = items > 0
+    ? { status: "saved" as const, items, written_by: null, error: null }
+    : { status: "failed" as const, items, written_by: null, error: "The shopping list could not be rebuilt after this change." };
+  return { ...summary, shopping_list, changed: { day, meal: mealType, to: added.title } };
 }
 
 export async function favorite(ref: string, dayRef: string, mealRef: string) {
@@ -300,6 +377,21 @@ export async function favorite(ref: string, dayRef: string, mealRef: string) {
   const { day, mealType, meal } = findMeal(plan, dayRef, mealRef);
   await addFavorite(session.user.id, meal);
   return { saved: true, day, meal: mealType, title: meal.title };
+}
+
+export async function listFavorites() {
+  const session = await requireSession();
+  const profile = await getProfile();
+  const favorites = withAllergyWarnings((await getFavorites(session.user.id)).map((f) => f.recipe_data), profile.allergies);
+  return {
+    favorites: favorites.map((r) => ({
+      title: r.title,
+      meal: r.mealType,
+      servings: r.servings,
+      prep_time: r.prepTime,
+      allergen_warning: r.cautionNote?.startsWith("Allergy warning") ? r.cautionNote : null,
+    })),
+  };
 }
 
 export async function deletePlan(ref: string) {

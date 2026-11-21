@@ -15,12 +15,13 @@ vi.mock("./commands", async (importOriginal) => ({
     if (plan === "bad") throw new (await import("./commands")).CliError("No plan \"bad\".");
     return { plan_id: plan };
   }),
+  makePlan: vi.fn(async () => ({ plan_id: "new" })),
   getProfile: vi.fn(async () => ({ allergies: ["Sesame"] })),
   updateProfile: vi.fn(async (changes: { allergies?: string[] }) => ({ allergies: changes.allergies })),
 }));
 
 import { buildServer } from "./mcp";
-import { updateProfile } from "./commands";
+import { makePlan, updateProfile } from "./commands";
 
 async function connect() {
   const [client, server] = InMemoryTransport.createLinkedPair();
@@ -53,7 +54,19 @@ describe("mcp server", () => {
     const createPlan = result.tools.find((t: { name: string }) => t.name === "create_plan");
     expect(createPlan.description).toMatch(/allergen_warnings to the user word for word/);
     const hints = Object.fromEntries(result.tools.map((t: { name: string; annotations: { destructiveHint: boolean } }) => [t.name, t.annotations.destructiveHint]));
-    expect(hints).toMatchObject({ update_profile: true, swap_meal: true, get_profile: false });
+    expect(hints).toMatchObject({ update_profile: true, swap_meal: true, get_profile: false, list_favorites: false });
+    // The planner's setup questions, the retry rule and pinning travel with the tool.
+    expect(createPlan.description).toMatch(/ask the user what the website's planner asks.*on hand.*saved recipes.*times out, don't call it again/);
+    expect(Object.keys(createPlan.inputSchema.properties)).toEqual(expect.arrayContaining(["pinned_recipes", "allow_duplicate"]));
+  });
+
+  it("refuses a duplicate week unless the agent passes allow_duplicate", async () => {
+    const request = await connect();
+    const call = (args: Record<string, unknown>) => request("tools/call", { name: "create_plan", arguments: { request: "next week", ...args } });
+    await call({ pinned_recipes: ["Usual Pasta"] });
+    expect(makePlan).toHaveBeenLastCalledWith(expect.objectContaining({ pinned: ["Usual Pasta"], refuseDuplicateWeek: true }));
+    await call({ allow_duplicate: true });
+    expect(makePlan).toHaveBeenLastCalledWith(expect.objectContaining({ refuseDuplicateWeek: false }));
   });
 
   it("lets an agent add an allergy but never remove one", async () => {

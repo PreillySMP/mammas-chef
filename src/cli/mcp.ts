@@ -12,6 +12,17 @@ const SAFETY =
   "Never tell the user a meal is safe or allergen-free: the checks are best effort. " +
   "If second_opinion_check is \"off\", mention that only the keyword allergen check ran.";
 
+const LIST =
+  "If shopping_list.status is not \"saved\", tell the user the plan was saved but its shopping list was not; get_shopping_list rebuilds it.";
+
+// The website's planner asks these on its setup screen; an agent has to ask them in conversation.
+const ASK_FIRST =
+  "Before calling, ask the user what the website's planner asks, skipping anything they already told you: " +
+  "(1) what they have on hand or want to use up, and any limits such as time (put their answer in request, in their words; on-hand items are read from it); " +
+  "(2) which meals to plan and which days to skip (meals, skip_days); " +
+  "(3) whether to build the week around any of their saved recipes (find them with list_favorites or search_recipes, then pass pinned_recipes). " +
+  "Then tell them which week you are about to plan and call once.";
+
 const PLAN_REF = { type: "string", description: 'A plan_id from list_plans (the first 8 characters are enough), or "latest".' };
 const DAY = { type: "string", enum: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] };
 const MEAL = { type: "string", enum: ["breakfast", "lunch", "dinner", "snack"] };
@@ -86,12 +97,14 @@ export function buildServer() {
       });
     });
 
-  tool("create_plan", `Writes and saves a new week of meals with the app's AI, for the household in the saved profile, plus its shopping list. Takes about a minute; don't call it again while it runs. ${SAFETY}`,
+  tool("create_plan", `Writes and saves a new week of meals with the app's AI, for the household in the saved profile, plus its shopping list: the same planner the website uses. ${ASK_FIRST} Takes about a minute. If the call times out, don't call it again: check list_plans first, because the plan is usually saved. In the result, pinned shows the day each pinned recipe landed on; a null day means the planner left it out. ${LIST} ${SAFETY}`,
     object({
       request: { type: "string", description: "The user's request in their words, e.g. \"plan next week, quick dinners, we have rice and spinach\"." },
       start_date: { type: "string", description: "First day of the week, YYYY-MM-DD. Defaults to the next week start." },
       meals: { type: "array", items: MEAL, description: "Meals to plan each day. Default: breakfast, lunch, dinner." },
       skip_days: { type: "array", items: DAY, description: "Days to leave out." },
+      pinned_recipes: { type: "array", items: { type: "string" }, description: "Saved recipes to build the week around: a recipe_id from search_recipes, or a favorite's title from list_favorites." },
+      allow_duplicate: { type: "boolean", description: "A week that already has a plan is refused. Set this only after the user confirms they want a second plan for that week." },
     }, ["request"]),
     async (a, ctx) => {
       // Progress every 5 s keeps clients that reset their timeout on progress waiting. A timer,
@@ -107,6 +120,8 @@ export function buildServer() {
           startDate: str(a, "start_date"),
           meals: a.meals as string[] | undefined,
           skipDays: a.skip_days as string[] | undefined,
+          pinned: a.pinned_recipes as string[] | undefined,
+          refuseDuplicateWeek: a.allow_duplicate !== true,
         });
       } finally {
         clearInterval(timer);
@@ -119,11 +134,11 @@ export function buildServer() {
     object({ plan: PLAN_REF, full: { type: "boolean" } }, ["plan"]),
     (a) => cmd.showPlan(str(a, "plan") ?? "latest", a.full === true), true);
 
-  tool("swap_meal", `Replaces one meal with a new AI-written one and saves the plan immediately. Leftover meals that came from it are updated too. ${SAFETY}`,
+  tool("swap_meal", `Replaces one meal with a new AI-written one and saves the plan immediately. Leftover meals that came from it are updated too. ${LIST} ${SAFETY}`,
     object({ plan: PLAN_REF, day: DAY, meal: MEAL, hint: HINT }, ["plan", "day", "meal"]),
     (a) => cmd.swap(str(a, "plan")!, str(a, "day")!, str(a, "meal")!, str(a, "hint")));
 
-  tool("regenerate_day", `Replaces all of one day's meals and saves the plan immediately. Also adds a day that is missing from the plan. ${SAFETY}`,
+  tool("regenerate_day", `Replaces all of one day's meals and saves the plan immediately. Also adds a day that is missing from the plan. ${LIST} ${SAFETY}`,
     object({ plan: PLAN_REF, day: DAY, hint: HINT }, ["plan", "day"]),
     (a) => cmd.regen(str(a, "plan")!, str(a, "day")!, str(a, "hint")));
 
@@ -133,9 +148,12 @@ export function buildServer() {
   tool("search_recipes", "Searches the app's recipe library. allergen_warning flags recipes that may conflict with the profile's allergies.",
     object({ query: { type: "string" } }, ["query"]), (a) => cmd.searchRecipes(str(a, "query") ?? ""), true);
 
-  tool("add_recipe_to_plan", `Puts a library recipe (recipe_id from search_recipes) into a plan slot, replacing what's there, and saves immediately. ${SAFETY}`,
+  tool("add_recipe_to_plan", `Puts a library recipe (recipe_id from search_recipes) into a plan slot, replacing what's there, and saves immediately. ${LIST} ${SAFETY}`,
     object({ plan: PLAN_REF, day: DAY, meal: MEAL, recipe_id: { type: "string" } }, ["plan", "day", "meal", "recipe_id"]),
     (a) => cmd.addRecipe(str(a, "plan")!, str(a, "day")!, str(a, "meal")!, str(a, "recipe_id")!));
+
+  tool("list_favorites", "Lists the user's favorite recipes. Pass a title to create_plan's pinned_recipes to put it in a new week. allergen_warning flags favorites that may conflict with the profile's allergies; show it to the user word for word.",
+    object({}), () => cmd.listFavorites(), true);
 
   tool("save_favorite", "Saves a meal from a plan to the user's favorites.",
     object({ plan: PLAN_REF, day: DAY, meal: MEAL }, ["plan", "day", "meal"]),

@@ -234,7 +234,8 @@ export function createPlan(opts: {
 }): Promise<MealPlanResponse> {
   return new Promise((resolve, reject) => {
     generateAndValidateMealPlan({
-      prompt: opts.prompt,
+      // Same suffix the Planner adds. Only the request gets it: pantry items are read from opts.prompt.
+      prompt: opts.prompt + (opts.pinnedRecipes?.length ? " Incorporate my pinned recipes." : ""),
       pinnedRecipes: opts.pinnedRecipes,
       skipSlots: opts.skipSlots,
       startDate: opts.startDate,
